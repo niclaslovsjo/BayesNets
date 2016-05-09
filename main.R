@@ -1,39 +1,75 @@
 setwd("/Users/niclaslovsjo/Library/Mobile Documents/com~apple~CloudDocs/Kurser/Data mining/projekt")
 house<-read.table("housing.data.txt")
-head(house)
+
 colnames(house)<-c("CRIM","ZN","INDUS","CHAS","NOX","RM","AGE","DIS",
                    "RAD","TAX","PTRATIO","B","LSTAT","MEDV")
 
-#7. Attribute Information:
-
-# 1. CRIM      per capita crime rate by town
-# 2. ZN        proportion of residential land zoned for lots over 
-# 25,000 sq.ft.
-# 3. INDUS     proportion of non-retail business acres per town
-# 4. CHAS      Charles River dummy variable (= 1 if tract bounds 
-#                                            river; 0 otherwise)
-# 5. NOX       nitric oxides concentration (parts per 10 million)
-# 6. RM        average number of rooms per dwelling
-# 7. AGE       proportion of owner-occupied units built prior to 1940
-# 8. DIS       weighted distances to five Boston employment centres
-# 9. RAD       index of accessibility to radial highways
-# 10. TAX      full-value property-tax rate per $10,000
-# 11. PTRATIO  pupil-teacher ratio by town
-# 12. B        1000(Bk - 0.63)^2 where Bk is the proportion of blacks 
-# by town
-# 13. LSTAT    % lower status of the population
-# 14. MEDV     Median value of owner-occupied homes in $1000's
+house[]<-lapply(house,factor)
+dim(house)
 
 library(bnlearn)
 ?bnlearn
-dag<-gs(house[,c(1:3,5:8,10:14)])
+dag<-gs(house[,c(1:3,5:8,11:12,14)])
 plot(dag)
 str(house)
 bn.fit(dag,data=house[,c(1:3,5:8,10:14)],method="mle")
-library(gRbase)
-library(gRim)
+
 
 
 GS<-function(data){
-  
+  #This function will perform the GrowShrink-algo that can be seen in the project-pdf as "algorithm1".
+  k<-ncol(data)
+  sigma<-sample(x = 1:k,size = k,replace = FALSE)
+  MB.list<-list()
+  changes.made<-TRUE
+  U<-c()
+
+  iter<-1
+  changes.made<-FALSE
+  print("out")
+  while(iter<=k){
+    MB<-c()
+    X<-sigma[iter]
+    U<-sigma[-which(sigma==X)]
+    for(element in U){
+      ifelse(length(MB)==0,v<-ci.test(x=data[,X],y=data[,element]),v<-ci.test(x=data[,X],y=data[,element],z=data[,MB]))
+      if(v$p.value>0.05){
+        MB<-c(MB,element)
+        print("first")
+        print(MB)
+        changes.made<-TRUE
+      }
+    }
+    for (element in MB){
+      ifelse(length(MB)==0,v<-ci.test(x=data[,X],y=data[,element]),v<-ci.test(x=data[,X],y=data[,element],z=data[,MB]))
+      if(v$p.value<0.05){
+        MB<-MB[-which(MB==element)]
+        print("second")
+        print(MB)
+        changes.made<-TRUE
+      }
+    }
+    iter<-iter+1
+    if(length(MB)>0){MB.list[[colnames(data)[X]]]<-colnames(data)[MB]}
+    print(MB.list)
+  }
+  MB.list
+  return(MB.list)
 }
+
+GS(house[1:20,c(1:3,5:8)])->mm
+
+par(mfrow=c(4,4))
+for(i in 1:14){
+  hist(house[,i],breaks=50)
+}
+colnames(house)
+data(iris)
+iris
+GS(iris[,1:4])->m
+m
+gs(iris[,1:4])->dag2
+par(mfrow=c(1,1))
+plot(dag2)
+par(mfrow=c(2,2))
+for(i in 1:4){hist(iris[,i],breaks=30)}
