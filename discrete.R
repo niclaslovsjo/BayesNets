@@ -12,6 +12,7 @@ library(gRain)
 library(bnlearn)
 data(Boston)
 feat<-c("ptratio","crim","age","lstat","medv")
+n<-dim(Boston)[1]
 #bnlearn::discretize(as.data.frame(Boston[,feat]),breaks=2,method="quantile")->disc.boston
 #we decided to do this manually(using the same values) since we need good labels:
 disc.boston<-Boston[,feat]
@@ -22,6 +23,7 @@ for(i in 1:5){
 #start creating network
 dag <- model2network("[ptratio][age][crim|ptratio][lstat|age][medv|crim:lstat]")
 bn.mle<-bn.fit(dag,data=disc.boston,method="mle")
+bn.mle
 graphviz.plot(dag)
 #Test some properties
   #Markov blankets: 
@@ -43,28 +45,24 @@ junction<-compile(as.grain(bn.mle))     #converts from bn-form to work with gRai
 junction
 querygrain(junction,nodes="medv")
 querygrain(junction,nodes=c("medv","ptratio"),type="joint")
-cond<-setEvidence(junction,nodes=c("lstat","age","ptratio","crim"),states=c("1","1","1","1"))
-querygrain(cond,nodes=c("medv"))
+cond<-setEvidence(junction,nodes=c("lstat","age","ptratio","crim"),states=c("1","0","0","1"))
+querygrain(cond,nodes=c("medv"))->m
 
+#Learning and prediction:
+index<-sample(1:n,floor(0.7*n),replace=FALSE)
+train<-disc.boston[index,]
+test<-disc.boston[-index,]
+fit.train<-bn.fit(dag,data=train,method="mle")
+preds<-c()
+for(i in 1:dim(test)[1]){
+  cond<-setEvidence(junction,nodes=c("lstat","age","ptratio","crim"),states=as.character(test[i,1:4]))
+  querygrain(cond,nodes=c("medv"))->m
+  ifelse(m$medv[1]>m$medv[2],preds[i]<-0,preds[i]<-1)
+}
+preds
+test[,5]
 
-blacks<-matrix(c("CRIM","LSTAT","NOX","B","INDUS","LSTAT","INDUS","DIS","B","CRIM"),ncol=2,byrow=FALSE)
-fast.iamb(house[,reals],blacklist = blacks)->dag1
-plot(dag1)
-bn.fit(dag1,data=house[,reals])->fit1
-fit1$CRIM
-library(rbmn)
-?rbmn
-rbmn(blacks)
-
-
-par(mfrow=c(2,3))
-for(el in feat){hist(house[,el],main=el,breaks=50)}
-par(mfrow=c(1,1))
-
-plot(dag.bnlearn)
-dsep(dag.bnlearn,"MEDV","AGE")
-
-house.cor<-cor(house[,feat])
+#This is totally baaaad.
 
 inv.cor<-cor2pcor(house.cor)
 colnames(inv.cor)<-colnames(house[,feat])
