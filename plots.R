@@ -1,0 +1,37 @@
+#plots:
+library(bnlearn)
+library(gRain)
+par(mfrow=c(1,1))
+plot.dag<-empty.graph(nodes=c("X1","X2","X3","X4"))
+arc.set<-matrix(c("X1","X2",
+                  "X1","X3",
+                  "X2","X4",
+                  "X3","X4",
+                  "X2","X3"),
+                byrow=TRUE,ncol=2,
+                dimnames=(list(NULL,c("from","to"))))
+arcs(plot.dag)<-arc.set
+graphviz.plot(plot.dag,layout="circo")
+
+plot.dag2<-empty.graph(nodes=c("X1","X2","X3"))
+arc.set2<-matrix(c("X1","X2",
+                  "X2","X3"),
+                byrow=TRUE,ncol=2,
+                dimnames=(list(NULL,c("from","to"))))
+arcs(plot.dag2)<-arc.set2
+plot.dag3<-empty.graph(nodes=c("X1","X2","X3"))
+arc.set3<-matrix(c("X1","X2",
+                  "X1","X3"),
+                byrow=TRUE,ncol=2,
+                dimnames=(list(NULL,c("from","to"))))
+arcs(plot.dag3)<-arc.set3
+plot.dag4<-empty.graph(nodes=c("X1","X2","X3"))
+arc.set4<-matrix(c("X1","X3",
+                  "X2","X3"),
+                byrow=TRUE,ncol=2,
+                dimnames=(list(NULL,c("from","to"))))
+arcs(plot.dag4)<-arc.set4
+par(mfrow=c(1,3))
+graphviz.plot(plot.dag2)
+graphviz.plot(plot.dag3)
+graphviz.plot(plot.dag4)
