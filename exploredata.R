@@ -33,3 +33,5 @@ plot(stru1)
 
 
 #Next: Learning the parameters
+
+

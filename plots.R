@@ -35,3 +35,15 @@ par(mfrow=c(1,3))
 graphviz.plot(plot.dag2)
 graphviz.plot(plot.dag3)
 graphviz.plot(plot.dag4)
+
+#Kevin-game:
+
+kevin<-empty.graph(nodes=c("soccer","cook","gf","Pls","monday","veg"))
+arc.set.kevin<-matrix(c("soccer","cook",
+                        "gf","cook",
+                        "cook","veg",
+                        "monday","veg",
+                        "veg","Pls"),
+                      byrow=TRUE,ncol=2)
+arcs(kevin)<-arc.set.kevin
+graphviz.plot(kevin)
